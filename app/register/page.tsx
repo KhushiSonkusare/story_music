@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { 
-  Search, Home, FileText, FileKey, Users, BarChart2, Shield, Settings, HelpCircle, Calendar, Upload 
+  Search, Home, FileText, FileKey, Users, BarChart2, Shield, Settings, HelpCircle, Calendar, Upload, Menu 
 } from "lucide-react";
+import Link from "next/link";
 
 interface FormData {
   title: string;
@@ -33,7 +34,7 @@ function FormField({ number, label, placeholder, type = "text", textarea, select
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-2">
-        <div className="w-6 h-6 bg-[#222] text-center text-sm">{number}</div>
+        <div className="w-6 h-6 bg-[#222] text-center text-sm flex items-center justify-center rounded-sm">{number}</div>
         <label className="text-sm font-medium">{label}</label>
       </div>
       {textarea ? (
@@ -42,6 +43,7 @@ function FormField({ number, label, placeholder, type = "text", textarea, select
           onChange={(e) => setFormData(prev => ({ ...prev, [field]: e.target.value }))}
           className="w-full p-3 bg-[#121212] text-white text-sm border border-[#333] rounded-md focus:outline-none focus:border-[#fa5f02]"
           placeholder={placeholder}
+          rows={4}
         />
       ) : select ? (
         <select
@@ -97,7 +99,7 @@ function DatePickerField({ number, label, selectedDate, setSelectedDate, formDat
   return (
     <div className="space-y-2 relative">
       <div className="flex items-center gap-2">
-        <div className="w-6 h-6 bg-[#222] text-center text-sm">{number}</div>
+        <div className="w-6 h-6 bg-[#222] text-center text-sm flex items-center justify-center rounded-sm">{number}</div>
         <label className="text-sm font-medium">{label}</label>
       </div>
       <div className="relative">
@@ -110,7 +112,7 @@ function DatePickerField({ number, label, selectedDate, setSelectedDate, formDat
           className="w-full p-3 bg-[#121212] text-white text-sm border border-[#333] rounded-md focus:outline-none focus:border-[#fa5f02]"
           placeholderText="Select a date"
         />
-        <Calendar className="absolute right-3 top-3 text-gray-400 w-5 h-5" />
+        <Calendar className="absolute right-3 top-3 text-gray-400 w-5 h-5 pointer-events-none" />
       </div>
     </div>
   );
@@ -133,7 +135,7 @@ function FileUploadField({ number, label, formData, setFormData }: FileUploadFie
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-2">
-        <div className="w-6 h-6 bg-[#222] text-center text-sm">{number}</div>
+        <div className="w-6 h-6 bg-[#222] text-center text-sm flex items-center justify-center rounded-sm">{number}</div>
         <label className="text-sm font-medium">{label}</label>
       </div>
       <div className="flex items-center gap-2">
@@ -146,13 +148,13 @@ function FileUploadField({ number, label, formData, setFormData }: FileUploadFie
         />
         <label 
           htmlFor="file-upload" 
-          className="flex items-center gap-2 px-4 py-2 bg-[#222] text-white rounded-md cursor-pointer"
+          className="flex items-center gap-2 px-4 py-2 bg-[#222] text-white rounded-md cursor-pointer hover:bg-[#333] transition-colors"
         >
           <Upload className="w-5 h-5" />
           Choose Files
         </label>
       </div>
-      <div className="text-sm text-gray-400">
+      <div className="text-sm text-gray-400 max-h-24 overflow-y-auto">
         {formData.files.length > 0 ? formData.files.map(file => <div key={file.name}>{file.name}</div>) : "No files selected"}
       </div>
     </div>
@@ -165,6 +167,7 @@ export default function RegisterIP() {
   const [progress, setProgress] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const [formData, setFormData] = useState<FormData>({
     title: "",
@@ -180,6 +183,21 @@ export default function RegisterIP() {
     setProgress((filledFields / 5) * 100);
   }, [formData]);
 
+  const handleClickOutside = (e: MouseEvent) => {
+    if (isMobileMenuOpen && e.target instanceof HTMLElement) {
+      const sidebar = document.getElementById('sidebar');
+      const sidebarToggle = document.getElementById('sidebar-toggle');
+      if (sidebar && !sidebar.contains(e.target) && !sidebarToggle?.contains(e.target)) {
+        setIsMobileMenuOpen(false);
+      }
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isMobileMenuOpen]);
+
   if (!mounted) return null;
 
   const handleSubmit = () => {
@@ -188,58 +206,166 @@ export default function RegisterIP() {
 
   return (
     <div className="flex min-h-screen bg-black text-white">
-      {/* Sidebar */}
-      <div className="w-64 border-r border-[#333] p-4 fixed left-0 top-0 h-screen">
-        <div className="relative mb-4">
-          <Search className="absolute left-3 top-3 text-gray-400 w-5 h-5" />
+      {/* Sidebar - Now static */}
+      <div
+        id="sidebar"
+        className="w-64 border-r border-[#333] p-4 bg-black h-screen sticky top-0"
+      >
+        <div className="mb-6 flex justify-center">
+          <div className="text-xl font-bold text-[#fa5f02]">IP REGISTER</div>
+        </div>
+        
+        <div className="relative mb-6">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
           <input 
             type="text" 
             placeholder="Search..." 
-            className="pl-10 pr-4 py-2 w-full bg-[#1a1a1a] text-white rounded-md focus:outline-none"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-3 py-2 bg-[#1a1a1a] rounded-md text-sm border border-[#333] focus:outline-none focus:border-[#fa5f02]"
           />
         </div>
 
-        <div className="space-y-2">
-          <SidebarItem icon={<Home />} label="Dashboard" />
-          <SidebarItem icon={<FileText />} label="Register IP" active />
+        <div className="space-y-1">
+          <Link href="/">
+            <SidebarItem icon={<Home />} label="Dashboard" />
+          </Link>
+          <Link href="/register">
+            <SidebarItem icon={<FileText />} label="Register IP" active />
+          </Link>
           <SidebarItem icon={<FileKey />} label="Generate ZPK" />
           <SidebarItem icon={<Users />} label="Collaborations" />
           <SidebarItem icon={<BarChart2 />} label="Analytics" />
-          <SidebarItem icon={<Shield />} label="Credentials" />
+          <Link href="/credentials">
+            <SidebarItem icon={<Shield />} label="Credentials" />
+          </Link>
           <SidebarItem icon={<Settings />} label="Settings" />
           <SidebarItem icon={<HelpCircle />} label="Help" />
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 ml-64 p-8">
-        <div className="mb-8 text-center">
-          <h1 className="text-2xl font-medium text-[#fa5f02]">REGISTER YOUR IP</h1>
-          <h2 className="text-2xl font-medium">We just need some information</h2>
+      {/* Mobile Menu - Overlay for small screens only */}
+      {isMobileMenuOpen && (
+        <div className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-30" onClick={() => setIsMobileMenuOpen(false)}></div>
+      )}
 
-          {/* Progress Bar */}
-          <div className="relative h-2 w-1/2 bg-[#222] mx-auto mt-4">
-            <div className="absolute h-full bg-[#fa5f02] transition-all duration-300" style={{ width: `${progress}%` }}></div>
-          </div>
+      {/* Mobile Sidebar - Shown only on small screens when menu is open */}
+      <div
+        className={`lg:hidden fixed inset-y-0 left-0 z-40 w-64 border-r border-[#333] p-4 bg-black transform transition-transform duration-300 ease-in-out ${
+          isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        <div className="mb-6 flex justify-center">
+          <div className="text-xl font-bold text-[#fa5f02]">IP REGISTER</div>
+        </div>
+        
+        <div className="relative mb-6">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <input 
+            type="text" 
+            placeholder="Search..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-3 py-2 bg-[#1a1a1a] rounded-md text-sm border border-[#333] focus:outline-none focus:border-[#fa5f02]"
+          />
         </div>
 
-        {/* Form */}
-        <div className="space-y-6 max-w-2xl mx-auto">
-          <FormField number="1" label="Asset Title" placeholder="Enter title..." formData={formData} setFormData={setFormData} field="title" />
-          <FormField number="2" label="Description" placeholder="Enter description..." textarea formData={formData} setFormData={setFormData} field="description" />
-          <DatePickerField number="3" label="Creation Date" selectedDate={selectedDate} setSelectedDate={setSelectedDate} formData={formData} setFormData={setFormData} />
-          <FormField number="4" label="Rights Management" select formData={formData} setFormData={setFormData} field="rights" />
-          <FileUploadField number="5" label="Upload Files" formData={formData} setFormData={setFormData} />
+        <div className="space-y-1">
+          <Link href="/">
+            <SidebarItem icon={<Home />} label="Dashboard" />
+          </Link>
+          <Link href="/register">
+            <SidebarItem icon={<FileText />} label="Register IP" active />
+          </Link>
+          <SidebarItem icon={<FileKey />} label="Generate ZPK" />
+          <SidebarItem icon={<Users />} label="Collaborations" />
+          <SidebarItem icon={<BarChart2 />} label="Analytics" />
+          <Link href="/credentials">
+            <SidebarItem icon={<Shield />} label="Credentials" />
+          </Link>
+          <SidebarItem icon={<Settings />} label="Settings" />
+          <SidebarItem icon={<HelpCircle />} label="Help" />
+        </div>
+      </div>
 
-          {/* Submit Button */}
-          <button 
-            className="w-full py-3 bg-[#fa5f02] font-medium hover:bg-[#d94e00] transition" 
-            onClick={handleSubmit}
-          >
-            Submit
-          </button>
+      {/* Mobile Sidebar Toggle */}
+      <button
+        id="sidebar-toggle"
+        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-md bg-[#1a1a1a] hover:bg-[#222] transition-colors"
+      >
+        <Menu className="w-6 h-6" />
+      </button>
+
+      {/* Main Content */}
+      <div className="flex-1 p-4 pt-16 lg:pt-8 lg:p-8">
+        <div className="max-w-3xl mx-auto w-full">
+          <div className="mb-8 text-center">
+            <h1 className="text-2xl sm:text-3xl font-medium text-[#fa5f02]">REGISTER YOUR IP</h1>
+            <h2 className="text-xl sm:text-2xl font-medium mt-2">We just need some information</h2>
+
+            {/* Progress Bar */}
+            <div className="relative h-2 w-full max-w-md bg-[#222] mx-auto mt-6">
+              <div 
+                className="absolute h-full bg-[#fa5f02] transition-all duration-300" 
+                style={{ width: `${progress}%` }}
+              ></div>
+            </div>
+            <div className="text-xs text-gray-400 mt-1">{Math.round(progress)}% Complete</div>
+          </div>
+
+          {/* Form */}
+          <div className="space-y-6 mx-auto bg-[#0a0a0a] border border-[#222] rounded-lg p-6">
+            <FormField 
+              number="1" 
+              label="Asset Title" 
+              placeholder="Enter title..." 
+              formData={formData} 
+              setFormData={setFormData} 
+              field="title" 
+            />
+            <FormField 
+              number="2" 
+              label="Description" 
+              placeholder="Enter description..." 
+              textarea 
+              formData={formData} 
+              setFormData={setFormData} 
+              field="description" 
+            />
+            <DatePickerField 
+              number="3" 
+              label="Creation Date" 
+              selectedDate={selectedDate} 
+              setSelectedDate={setSelectedDate} 
+              formData={formData} 
+              setFormData={setFormData} 
+            />
+            <FormField 
+              number="4" 
+              label="Rights Management" 
+              select 
+              formData={formData} 
+              setFormData={setFormData} 
+              field="rights" 
+            />
+            <FileUploadField 
+              number="5" 
+              label="Upload Files" 
+              formData={formData} 
+              setFormData={setFormData} 
+            />
+
+            {/* Submit Button */}
+            <div className="flex justify-center pt-4">
+              <button 
+                className="px-8 py-3 bg-[#fa5f02] font-medium hover:bg-[#d94e00] transition-colors rounded-full text-lg w-full sm:w-auto"
+                onClick={handleSubmit}
+              >
+                Register Now
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>

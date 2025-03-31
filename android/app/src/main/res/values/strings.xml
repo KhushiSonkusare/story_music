@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">MusicIP</string>
+    <string name="title_activity_main">MusicIP</string>
+    <string name="package_name">com.story.musicip</string>
+    <string name="custom_url_scheme">com.story.musicip</string>
+</resources>

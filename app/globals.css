@@ -7,6 +7,52 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* Hide scrollbar for Chrome, Safari and Opera */
+::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+* {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* Smooth page transitions */
+.page-transition {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Search bar styling */
+.search-bar {
+  @apply relative flex items-center gap-3 p-3 rounded-md bg-[#121212] border border-[#333333] transition-all duration-200;
+}
+
+.search-bar:focus-within {
+  @apply border-[#fa5f02] bg-[#1a1a1a];
+}
+
+.search-bar input {
+  @apply w-full bg-transparent text-white placeholder:text-[#888888] focus:outline-none;
+}
+
+.search-bar .search-icon {
+  @apply w-5 h-5 text-[#888888] transition-colors duration-200;
+}
+
+.search-bar:focus-within .search-icon {
+  @apply text-[#fa5f02];
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;
