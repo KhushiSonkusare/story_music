@@ -17,9 +17,9 @@ app.use(cors());
 app.use('/api/ip-registrations', require('./routes/ipRoutes'));
 
 app.get('/', (req, res) => {
-    res.send('API is running...');
+  res.send('API is running...');
 });
 
 app.listen(PORT, () => {
-    console.log(`🚀 Server running on http://localhost:${PORT}`);
+  console.log(`🚀 Server running on http://localhost:${PORT}`);
 });
