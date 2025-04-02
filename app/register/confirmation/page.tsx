@@ -1,18 +1,52 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { CheckCircle2, ArrowLeft, Copy, Check } from "lucide-react";
 import Link from "next/link";
 
 export default function Confirmation() {
+  const router = useRouter();
   const [copied, setCopied] = useState(false);
-  const registrationId = "ZPK-2025-03-31-9382";
+  const [registrationId, setRegistrationId] = useState<string>("");
+  const [timestamp, setTimestamp] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Simulate fetching data from server or retrieving from sessionStorage
+    // In a real app, you might get this from API/context/redux
+    const storedId = sessionStorage.getItem('registrationId');
+    const storedTimestamp = sessionStorage.getItem('registrationTimestamp');
+    
+    if (storedId && storedTimestamp) {
+      setRegistrationId(storedId);
+      setTimestamp(new Date(storedTimestamp).toLocaleString());
+    } else {
+      // Fallback if data isn't available
+      setRegistrationId("ZPK-2025-03-31-9382");
+      setTimestamp(new Date().toLocaleString());
+    }
+    
+    // Simulate loading state
+    setTimeout(() => setIsLoading(false), 600);
+  }, []);
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(registrationId);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-black to-[#121212] text-white flex items-center justify-center">
+        <div className="flex flex-col items-center">
+          <div className="w-10 h-10 border-4 border-[#fa5f02] border-t-transparent rounded-full animate-spin"></div>
+          <p className="mt-4 text-gray-400">Loading confirmation...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-black to-[#121212] text-white flex items-center justify-center">
@@ -63,7 +97,7 @@ export default function Confirmation() {
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-gray-400">Timestamp</span>
-                <span className="font-mono">{new Date().toLocaleString()}</span>
+                <span className="font-mono">{timestamp}</span>
               </div>
             </div>
             

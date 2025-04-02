@@ -19,18 +19,35 @@ const ipRegistrationSchema = new mongoose.Schema({
     enum: ['exclusive', 'non-exclusive', 'limited']
   },
   files: [{
+    originalName: String,
     filename: String,
     path: String,
-    contentType: String
+    contentType: String,
+    size: Number,
+    uploadedAt: {
+      type: Date,
+      default: Date.now
+    }
   }],
   registrationId: {
     type: String,
-    unique: true
+    unique: true,
+    required: true
   },
   createdAt: { 
     type: Date, 
     default: Date.now 
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now
   }
+});
+
+// Update the updatedAt timestamp on every save
+ipRegistrationSchema.pre('save', function(next) {
+  this.updatedAt = Date.now();
+  next();
 });
 
 const IpRegistration = mongoose.model('IpRegistration', ipRegistrationSchema);

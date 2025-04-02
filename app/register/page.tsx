@@ -161,6 +161,23 @@ function FileUploadField({ number, label, formData, setFormData }: FileUploadFie
   );
 }
 
+// Simulated API service
+const api = {
+  registerIP: async (data: any) => {
+    // Simulate API request delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // In a real app, this would be a fetch/axios call to your backend
+    console.log('Data sent to backend:', data);
+    
+    // Simulate a successful response with registration ID
+    return {
+      success: true,
+      registrationId: `ZPK-${new Date().toISOString().slice(0, 10)}-${Math.floor(Math.random() * 10000)}`
+    };
+  }
+};
+
 export default function RegisterIP() {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
@@ -168,6 +185,7 @@ export default function RegisterIP() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [formData, setFormData] = useState<FormData>({
     title: "",
@@ -179,7 +197,10 @@ export default function RegisterIP() {
 
   useEffect(() => {
     setMounted(true);
-    const filledFields = Object.values(formData).filter((val) => val !== "" && val.length > 0).length;
+    const filledFields = Object.values(formData).filter((val) => {
+      if (Array.isArray(val)) return val.length > 0;
+      return val !== "";
+    }).length;
     setProgress((filledFields / 5) * 100);
   }, [formData]);
 
@@ -200,16 +221,59 @@ export default function RegisterIP() {
 
   if (!mounted) return null;
 
-  const handleSubmit = () => {
-    router.push("/register/confirmation");
+  const handleSubmit = async () => {
+    // Validation
+    if (!formData.title || !formData.description || !formData.date || !formData.rights) {
+      // Show error message
+      alert("Please fill in all required fields");
+      return;
+    }
+  
+    setIsSubmitting(true);
+  
+    const formDataToSend = new FormData();
+    formDataToSend.append("title", formData.title);
+    formDataToSend.append("description", formData.description);
+    formDataToSend.append("date", formData.date);
+    formDataToSend.append("rights", formData.rights);
+  
+    formData.files.forEach(file => {
+      formDataToSend.append("files", file);
+    });
+  
+    try {
+      const response = await fetch("http://localhost:5000/api/ip-registrations/register", {
+        method: "POST",
+        body: formDataToSend,
+      });
+  
+      const result = await response.json();
+      
+      if (result.success) {
+        // Success - show registration ID
+        alert(`Registration successful! Your registration ID is ${result.data.registrationId}`);
+        
+        // Optionally redirect to a success page or dashboard
+        router.push(`register/confirmation`);
+      } else {
+        // Error handling
+        alert(`Registration failed: ${result.message}`);
+      }
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      alert("An error occurred while submitting the form. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
-
+  
+  
   return (
     <div className="flex min-h-screen bg-black text-white">
       {/* Sidebar - Now static */}
       <div
         id="sidebar"
-        className="w-64 border-r border-[#333] p-4 bg-black h-screen sticky top-0"
+        className="w-64 border-r border-[#333] p-4 bg-black h-screen sticky top-0 hidden lg:block"
       >
         <div className="mb-6 flex justify-center">
           <div className="text-xl font-bold text-[#fa5f02]">IP REGISTER</div>
@@ -244,12 +308,12 @@ export default function RegisterIP() {
         </div>
       </div>
 
-      {/* Mobile Menu - Overlay for small screens only */}
+      {/* Mobile Menu - Overlay */}
       {isMobileMenuOpen && (
         <div className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-30" onClick={() => setIsMobileMenuOpen(false)}></div>
       )}
 
-      {/* Mobile Sidebar - Shown only on small screens when menu is open */}
+      {/* Mobile Sidebar */}
       <div
         className={`lg:hidden fixed inset-y-0 left-0 z-40 w-64 border-r border-[#333] p-4 bg-black transform transition-transform duration-300 ease-in-out ${
           isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
@@ -359,10 +423,19 @@ export default function RegisterIP() {
             {/* Submit Button */}
             <div className="flex justify-center pt-4">
               <button 
-                className="px-8 py-3 bg-[#fa5f02] font-medium hover:bg-[#d94e00] transition-colors rounded-full text-lg w-full sm:w-auto"
+                className={`px-8 py-3 bg-[#fa5f02] font-medium hover:bg-[#d94e00] transition-colors rounded-full text-lg w-full sm:w-auto flex items-center justify-center ${isSubmitting ? 'opacity-75 cursor-not-allowed' : ''}`}
                 onClick={handleSubmit}
+                disabled={isSubmitting}
               >
-                Register Now
+                {isSubmitting ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Processing...
+                  </>
+                ) : "Register Now"}
               </button>
             </div>
           </div>
